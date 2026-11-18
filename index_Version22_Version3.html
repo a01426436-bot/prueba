@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Comidas para estudiantes</title>
+
+  <style>
+    :root {
+      color-scheme: light;
+      --fondo: #f3f8ff;
+      --panel: #ffffff;
+      --panel-suave: #edf5ff;
+      --texto: #1d3557;
+      --texto-secundario: #476c8e;
+      --primario: #2c6fb4;
+      --primario-hover: #1d4f8c;
+      --acento: #dfeeff;
+      --borde: #d8e7fb;
+      --sombra: rgba(24, 71, 126, 0.08);
+    }
+
+    body.dark-mode {
+      color-scheme: dark;
+      --fondo: #071629;
+      --panel: #102747;
+      --panel-suave: #183657;
+      --texto: #c9e0fa;
+      --texto-secundario: #a9c8eb;
+      --primario: #32699f;
+      --primario-hover: #3d78b0;
+      --acento: #1c3c60;
+      --borde: #315174;
+      --sombra: rgba(0, 0, 0, 0.25);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+      background: var(--fondo);
+      color: var(--texto);
+      font-family: Arial, sans-serif;
+      transition: background .2s ease, color .2s ease;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    h1, h2, h3 { color: var(--texto); }
+    header h1 { margin-bottom: 6px; }
+
+    p {
+      color: var(--texto-secundario);
+      line-height: 1.5;
+    }
+
+    .barra-pestanas {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 6px;
+      overflow-x: auto;
+      border: 1px solid var(--borde);
+      border-radius: 12px;
+      background: var(--panel);
+    }
+
+    .pestana {
+      flex: 1;
+      min-width: 80px;
+      padding: 11px 14px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--texto-secundario);
+      font: inherit;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .pestana[aria-selected="true"] {
+      background: var(--primario);
+      color: white;
+    }
+
+    .panel {
+      padding: 22px;
+      border: 1px solid var(--borde);
+      border-radius: 16px;
+      background: var(--panel);
+      box-shadow: 0 4px 16px var(--sombra);
+    }
+
+    [hidden] { display: none !important; }
+
+    label {
+      display: block;
+      margin: 14px 0;
+      color: var(--texto);
+      font-weight: 600;
+    }
+
+    input[type="text"], input[type="time"], select {
+      width: 100%;
+      margin-top: 6px;
+      padding: 11px 12px;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      background: var(--panel-suave);
+      color: var(--texto);
+      font: inherit;
+    }
+
+    input::placeholder { color: var(--texto-secundario); }
+
+    .preferencias {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0 18px;
+    }
+
+    .preferencia {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin: 0;
+      padding: 8px 11px;
+      border: 1px solid var(--borde);
+      border-radius: 999px;
+      background: var(--panel-suave);
+      font-weight: normal;
+    }
+
+    .preferencia input { accent-color: var(--primario); }
+
+    .acciones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    button.accion, button.tema {
+      padding: 11px 15px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--primario);
+      color: white;
+      font: inherit;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button.accion:hover { background: var(--primario-hover); }
+
+    button.tema {
+      border: 1px solid var(--borde);
+      background: var(--acento);
+      color: var(--texto);
+    }
+
+    button:disabled { cursor: not-allowed; opacity: .55; }
+
+    .estado {
+      min-height: 1.5em;
+      color: var(--texto-secundario);
+      font-weight: 600;
+    }
+
+    .platillo {
+      padding: 16px 0;
+      border-top: 1px solid var(--borde);
+    }
+
+    .platillo h3 { margin: 0 0 7px; }
+
+    .tiempo {
+      margin: 0 0 8px;
+      color: var(--texto-secundario);
+      font-weight: bold;
+    }
+
+    .etiquetas { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .etiqueta {
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: var(--acento);
+      color: var(--texto);
+      font-size: .85rem;
+    }
+
+    .barra-experiencia {
+      height: 14px;
+      overflow: hidden;
+      border: 1px solid var(--borde);
+      border-radius: 999px;
+      background: var(--panel-suave);
+    }
+
+    .barra-experiencia div {
+      width: 0;
+      height: 100%;
+      background: var(--primario);
+      transition: width .25s ease;
+    }
+
+    @media (max-width: 520px) {
+      body { padding: 14px 12px 30px; }
+      .panel { padding: 17px; }
+      header { align-items: flex-start; }
+      button.accion { width: 100%; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div>
+      <h1>Comidas para estudiantes</h1>
+      <p id="saludo">Organiza tus comidas y encuentra ideas para preparar.</p>
+    </div>
+
+    <button id="alternarTema" class="tema" type="button" aria-pressed="false">
+      Activar modo oscuro
+    </button>
+  </header>
+
+  <nav class="barra-pestanas" role="tablist" aria-label="Secciones de la app">
+    <button class="pestana" id="tab-perfil" type="button" role="tab" aria-selected="true" aria-controls="panel-perfil">Perfil</button>
+    <button class="pestana" id="tab-recetas" type="button" role="tab" aria-selected="false" aria-controls="panel-recetas" tabindex="-1">Recetas</button>
+    <button class="pestana" id="tab-alarmas" type="button" role="tab" aria-selected="false" aria-controls="panel-alarmas" tabindex="-1">Alarmas</button>
+    <button class="pestana" id="tab-nivel" type="button" role="tab" aria-selected="false" aria-controls="panel-nivel" tabindex="-1">Nivel</button>
+  </nav>
+
+  <main>
+    <section class="panel" id="panel-perfil" role="tabpanel" aria-labelledby="tab-perfil">
+      <h2>Mi perfil</h2>
+      <label for="nombre">Tu nombre</label>
+      <input id="nombre" type="text" maxlength="50" placeholder="Por ejemplo, Alex">
+
+      <p>¿Qué tipos de alimentos prefieres?</p>
+      <div class="preferencias">
+        <label class="preferencia"><input type="checkbox" name="preferencia" value="vegetariano"> Vegetarianos</label>
+        <label class="preferencia"><input type="checkbox" name="preferencia" value="economico"> Económicos</label>
+        <label class="preferencia"><input type="checkbox" name="preferencia" value="proteico"> Proteicos</label>
+        <label class="preferencia"><input type="checkbox" name="preferencia" value="rapido"> Rápidos</label>
+      </div>
+
+      <div class="acciones">
+        <button class="accion" id="guardarPerfil" type="button">Guardar perfil</button>
+      </div>
+      <p id="estadoPerfil" class="estado" aria-live="polite"></p>
+    </section>
+
+    <section class="panel" id="panel-recetas" role="tabpanel" aria-labelledby="tab-recetas" hidden>
+      <h2>Recetas</h2>
+      <label for="tipoComida">Mostrar ideas para:</label>
+      <select id="tipoComida">
+        <option value="automatico">La próxima comida según mi horario</option>
+        <option value="desayuno">Desayuno</option>
+        <option value="comida">Comida</option>
+        <option value="cena">Cena</option>
+      </select>
+
+      <p id="mensajeRecomendaciones" class="estado" aria-live="polite"></p>
+      <div id="recomendaciones"></div>
+      <p>Los tiempos de preparación son aproximados.</p>
+    </section>
+
+    <section class="panel" id="panel-alarmas" role="tabpanel" aria-labelledby="tab-alarmas" hidden>
+      <h2>Alarmas de comida</h2>
+
+      <label for="desayuno">Desayuno
+        <input id="desayuno" type="time" value="08:00">
+      </label>
+      <label for="almuerzo">Comida
+        <input id="almuerzo" type="time" value="13:00">
+      </label>
+      <label for="cena">Cena
+        <input id="cena" type="time" value="19:00">
+      </label>
+
+      <div class="acciones">
+        <button class="accion" id="conectar" type="button">Conectar micro:bit</button>
+        <button class="accion" id="guardarHorarios" type="button">Guardar y activar alarmas</button>
+      </div>
+
+      <p id="estadoAlarma" class="estado" aria-live="polite">Micro:bit no conectada.</p>
+      <p>Deja esta página abierta para que las alarmas puedan funcionar.</p>
+    </section>
+
+    <section class="panel" id="panel-nivel" role="tabpanel" aria-labelledby="tab-nivel" hidden>
+      <h2>Mi nivel</h2>
+      <p id="resumenNivel" aria-live="polite"></p>
+
+      <div class="barra-experiencia" role="progressbar" aria-label="Experiencia para el siguiente nivel" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0">
+        <div id="progresoXP"></div>
+      </div>
+
+      <label for="comidaNivel">Registrar respuesta para:</label>
+      <select id="comidaNivel">
+        <option value="desayuno">Desayuno</option>
+        <option value="comida">Comida</option>
+        <option value="cena">Cena</option>
+      </select>
+
+      <p id="estadoComidaNivel" class="estado" aria-live="polite"></p>
+
+      <div class="acciones">
+        <button class="accion" id="confirmarComer" type="button">Sí, comí</button>
+        <button class="accion" id="confirmarNoComer" type="button">No comí</button>
+      </div>
+
+      <p>Al registrar que comiste ganas 10 XP. Cada 20 XP subes un nivel. Si registras que no comiste, bajas un nivel y tu XP vuelve a cero.</p>
+    </section>
+  </main>
+
+  <script>
+    const platillos = [
+      { nombre: "Avena con plátano y canela", tiempo: 10, comidas: ["desayuno"], etiquetas: ["vegetariano", "economico", "rapido"] },
+      { nombre: "Yogur con fruta y granola", tiempo: 5, comidas: ["desayuno"], etiquetas: ["vegetariano", "rapido"] },
+      { nombre: "Tostadas de aguacate y huevo", tiempo: 15, comidas: ["desayuno"], etiquetas: ["vegetariano", "proteico"] },
+      { nombre: "Licuado de plátano y avena", tiempo: 5, comidas: ["desayuno"], etiquetas: ["vegetariano", "economico", "rapido"] },
+      { nombre: "Hotcakes de avena", tiempo: 20, comidas: ["desayuno"], etiquetas: ["vegetariano", "economico"] },
+      { nombre: "Molletes de frijol y queso", tiempo: 15, comidas: ["desayuno", "cena"], etiquetas: ["vegetariano", "economico", "proteico"] },
+      { nombre: "Sándwich de huevo y espinaca", tiempo: 15, comidas: ["desayuno"], etiquetas: ["vegetariano", "proteico"] },
+      { nombre: "Chilaquiles con huevo", tiempo: 25, comidas: ["desayuno"], etiquetas: ["vegetariano", "economico", "proteico"] },
+
+      { nombre: "Ensalada de garbanzos y verduras", tiempo: 20, comidas: ["comida"], etiquetas: ["vegetariano", "economico", "proteico"] },
+      { nombre: "Arroz con huevo y verduras", tiempo: 20, comidas: ["comida"], etiquetas: ["vegetariano", "economico", "proteico"] },
+      { nombre: "Pasta con atún y tomate", tiempo: 20, comidas: ["comida"], etiquetas: ["economico", "proteico"] },
+      { nombre: "Tacos de lentejas", tiempo: 25, comidas: ["comida", "cena"], etiquetas: ["vegetariano", "economico", "proteico"] },
+      { nombre: "Bowl de arroz, frijoles y verduras", tiempo: 25, comidas: ["comida"], etiquetas: ["vegetariano", "economico", "proteico"] },
+      { nombre: "Pollo con verduras salteadas", tiempo: 25, comidas: ["comida", "cena"], etiquetas: ["proteico"] },
+      { nombre: "Tostadas de frijoles y aguacate", tiempo: 15, comidas: ["comida", "cena"], etiquetas: ["vegetariano", "economico", "rapido", "proteico"] },
+      { nombre: "Papa al horno con queso y frijoles", tiempo: 35, comidas: ["comida"], etiquetas: ["vegetariano", "economico", "proteico"] },
+      { nombre: "Ensalada de pasta con verduras", tiempo: 20, comidas: ["comida"], etiquetas: ["vegetariano", "economico"] },
+      { nombre: "Tacos de pollo y verduras", tiempo: 20, comidas: ["comida"], etiquetas: ["proteico", "rapido"] },
+
+      { nombre: "Crema de verduras con pan", tiempo: 30, comidas: ["cena"], etiquetas: ["vegetariano", "economico"] },
+      { nombre: "Omelette de queso y verduras", tiempo: 15, comidas: ["cena"], etiquetas: ["vegetariano", "proteico", "rapido"] },
+      { nombre: "Quesadillas de champiñones", tiempo: 15, comidas: ["cena"], etiquetas: ["vegetariano", "economico", "rapido"] },
+      { nombre: "Ensalada de atún", tiempo: 10, comidas: ["cena"], etiquetas: ["economico", "proteico", "rapido"] },
+      { nombre: "Sopa de lentejas", tiempo: 35, comidas: ["comida", "cena"], etiquetas: ["vegetariano", "economico", "proteico"] },
+      { nombre: "Wrap de hummus y verduras", tiempo: 10, comidas: ["cena"], etiquetas: ["vegetariano", "rapido"] },
+      { nombre: "Tostadas de huevo con tomate", tiempo: 12, comidas: ["cena"], etiquetas: ["vegetariano", "economico", "proteico", "rapido"] },
+      { nombre: "Arroz con verduras y tofu", tiempo: 25, comidas: ["comida", "cena"], etiquetas: ["vegetariano", "proteico"] }
+    ];
+
+    const nombreInput = document.getElementById("nombre");
+    const saludo = document.getElementById("saludo");
+    const selectorComida = document.getElementById("tipoComida");
+    const contenedorRecetas = document.getElementById("recomendaciones");
+    const mensajeRecetas = document.getElementById("mensajeRecomendaciones");
+    const selectorComidaNivel = document.getElementById("comidaNivel");
+    const estadoAlarma = document.getElementById("estadoAlarma");
+
+    const nombresComidas = { desayuno: "desayuno", comida: "comida", cena: "cena" };
+
+    const pestanas = Array.from(document.querySelectorAll('[role="tab"]'));
+
+    function activarPestana(pestanaActiva) {
+      pestanas.forEach(pestana => {
+        const activa = pestana === pestanaActiva;
+        pestana.setAttribute("aria-selected", String(activa));
+        pestana.tabIndex = activa ? 0 : -1;
+        document.getElementById(pestana.getAttribute("aria-controls")).hidden = !activa;
+      });
+      pestanaActiva.focus();
+    }
+
+    pestanas.forEach((pestana, indice) => {
+      pestana.addEventListener("click", () => activarPestana(pestana));
+      pestana.addEventListener("keydown", event => {
+        let siguiente = indice;
+        if (event.key === "ArrowRight") siguiente = (indice + 1) % pestanas.length;
+        else if (event.key === "ArrowLeft") siguiente = (indice - 1 + pestanas.length) % pestanas.length;
+        else return;
+        event.preventEventDefault?.();
+        activarPestana(pestanas[siguiente]);
+      });
+    });
+
+    function preferenciasSeleccionadas() {
+      return Array.from(document.querySelectorAll('input[name="preferencia"]:checked')).map(input => input.value);
+    }
+
+    function actualizarSaludo() {
+      const nombre = nombreInput.value.trim();
+      saludo.textContent = nombre
+        ? `¡Hola, ${nombre}! Organiza tus comidas y encuentra ideas para preparar.`
+        : "Organiza tus comidas y encuentra ideas para preparar.";
+    }
+
+    document.getElementById("guardarPerfil").addEventListener("click", () => {
+      localStorage.setItem("perfilComidas", JSON.stringify({ nombre: nombreInput.value.trim(), preferencias: preferenciasSeleccionadas() }));
+      actualizarSaludo();
+      document.getElementById("estadoPerfil").textContent = "Perfil guardado en este dispositivo.";
+      mostrarRecomendaciones();
+    });
+
+    nombreInput.addEventListener("input", actualizarSaludo);
+
+    try {
+      const perfil = JSON.parse(localStorage.getItem("perfilComidas"));
+      if (perfil) {
+        nombreInput.value = perfil.nombre || "";
+        document.querySelectorAll('input[name="preferencia"]').forEach(input => {
+          input.checked = (perfil.preferencias || []).includes(input.value);
+        });
+      }
+    } catch { localStorage.removeItem("perfilComidas"); }
+
+    function obtenerHorarios() {
+      return {
+        desayuno: document.getElementById("desayuno").value || "08:00",
+        comida: document.getElementById("almuerzo").value || "13:00",
+        cena: document.getElementById("cena").value || "19:00"
+      };
+    }
+
+    function obtenerProximaComida() {
+      const ahora = new Date();
+      const minutosAhora = ahora.getHours() * 60 + ahora.getMinutes();
+      let comidaProxima = "desayuno";
+      let esperaMenor = Infinity;
+
+      for (const [comida, hora] of Object.entries(obtenerHorarios())) {
+        const [horas, minutos] = hora.split(":").map(Number);
+        const minutosComida = horas * 60 + minutos;
+        const espera = (minutosComida - minutosAhora + 1440) % 1440;
+        if (espera < esperaMenor) {
+          esperaMenor = espera;
+          comidaProxima = comida;
+        }
+      }
+      return comidaProxima;
+    }
+
+    function mostrarRecomendaciones() {
+      const comida = selectorComida.value === "automatico" ? obtenerProximaComida() : selectorComida.value;
+      const preferencias = preferenciasSeleccionadas();
+      const opciones = platillos.filter(platillo => platillo.comidas.includes(comida));
+      const coincidencias = preferencias.length
+        ? opciones.filter(platillo => preferencias.some(preferencia => platillo.etiquetas.includes(preferencia)))
+        : opciones;
+      const lista = coincidencias.length ? coincidencias : opciones;
+
+      mensajeRecetas.textContent = coincidencias.length
+        ? `Ideas para ${nombresComidas[comida]}${preferencias.length ? " según tus preferencias" : ""}:`
+        : `No encontramos coincidencias con tus preferencias para ${nombresComidas[comida]}; aquí tienes otras opciones:`;
+
+      contenedorRecetas.replaceChildren();
+      lista.forEach(platillo => {
+        const articulo = document.createElement("article");
+        articulo.className = "platillo";
+
+        const titulo = document.createElement("h3");
+        titulo.textContent = platillo.nombre;
+
+        const tiempo = document.createElement("p");
+        tiempo.className = "tiempo";
+        tiempo.textContent = `Tiempo de preparación: ${platillo.tiempo} minutos`;
+
+        const etiquetas = document.createElement("div");
+        etiquetas.className = "etiquetas";
+        platillo.etiquetas.forEach(etiqueta => {
+          const elemento = document.createElement("span");
+          elemento.className = "etiqueta";
+          elemento.textContent = etiqueta;
+          etiquetas.appendChild(elemento);
+        });
+
+        articulo.append(titulo, tiempo, etiquetas);
+        contenedorRecetas.appendChild(articulo);
+      });
+    }
+
+    selectorComida.addEventListener("change", mostrarRecomendaciones);
+    document.querySelectorAll('input[name="preferencia"]').forEach(input => input.addEventListener("change", mostrarRecomendaciones));
+
+    const botonTema = document.getElementById("alternarTema");
+
+    function aplicarTemaOscuro(activar) {
+      document.body.classList.toggle("dark-mode", activar);
+      botonTema.textContent = activar ? "Activar modo claro" : "Activar modo oscuro";
+      botonTema.setAttribute("aria-pressed", String(activar));
+      localStorage.setItem("temaOscuro", String(activar));
+    }
+
+    aplicarTemaOscuro(localStorage.getItem("temaOscuro") === "true");
+    botonTema.addEventListener("click", () => aplicarTemaOscuro(!document.body.classList.contains("dark-mode")));
+
+    const XP_POR_NIVEL = 20;
+    const XP_POR_COMIDA = 10;
+    const CLAVE_NIVEL = "progresoNivelComidas";
+    let progresoNivel;
+
+    try {
+      progresoNivel = JSON.parse(localStorage.getItem(CLAVE_NIVEL)) || { nivel: 1, xp: 0, respuestas: {} };
+    } catch { progresoNivel = { nivel: 1, xp: 0, respuestas: {} }; }
+
+    if (!Number.isInteger(progresoNivel.nivel) || !Number.isInteger(progresoNivel.xp) || !progresoNivel.respuestas || typeof progresoNivel.respuestas !== "object") {
+      progresoNivel = { nivel: 1, xp: 0, respuestas: {} };
+    }
+
+    const botonComer = document.getElementById("confirmarComer");
+    const botonNoComer = document.getElementById("confirmarNoComer");
+    const resumenNivel = document.getElementById("resumenNivel");
+    const estadoComidaNivel = document.getElementById("estadoComidaNivel");
+    const barraXP = document.querySelector('[role="progressbar"]');
+    const progresoXP = document.getElementById("progresoXP");
+
+    function fechaLocal() {
+      const ahora = new Date();
+      const anio = ahora.getFullYear();
+      const mes = String(ahora.getMonth() + 1).padStart(2, "0");
+      const dia = String(ahora.getDate()).padStart(2, "0");
+      return `${anio}-${mes}-${dia}`;
+    }
+
+    function guardarProgresoNivel() { localStorage.setItem(CLAVE_NIVEL, JSON.stringify(progresoNivel)); }
+
+    function actualizarVistaNivel() {
+      resumenNivel.textContent = `Nivel ${progresoNivel.nivel} · ${progresoNivel.xp} de ${XP_POR_NIVEL} XP para el siguiente nivel`;
+      progresoXP.style.width = `${Math.min(100, (progresoNivel.xp / XP_POR_NIVEL) * 100)}%`;
+      barraXP.setAttribute("aria-valuenow", String(progresoNivel.xp));
+
+      const clave = `${fechaLocal()}-${selectorComidaNivel.value}`;
+      const respuesta = progresoNivel.respuestas[clave];
+
+      if (respuesta === "comi") estadoComidaNivel.textContent = "Ya registraste que comiste esta comida hoy.";
+      else if (respuesta === "no-comi") estadoComidaNivel.textContent = "Ya registraste que no comiste esta comida hoy.";
+      else estadoComidaNivel.textContent = "Aún no has registrado esta comida hoy.";
+
+      botonComer.disabled = Boolean(respuesta);
+      botonNoComer.disabled = Boolean(respuesta);
+    }
+
+    function registrarRespuestaNivel(respuesta, comida = selectorComidaNivel.value) {
+      const clave = `${fechaLocal()}-${comida}`;
+      if (progresoNivel.respuestas[clave]) {
+        selectorComidaNivel.value = comida;
+        actualizarVistaNivel();
+        return false;
+      }
+
+      progresoNivel.respuestas[clave] = respuesta;
+
+      if (respuesta === "comi") {
+        progresoNivel.xp += XP_POR_COMIDA;
+        while (progresoNivel.xp >= XP_POR_NIVEL) {
+          progresoNivel.xp -= XP_POR_NIVEL;
+          progresoNivel.nivel += 1;
+        }
+      } else {
+        if (progresoNivel.nivel > 1) progresoNivel.nivel -= 1;
+        progresoNivel.xp = 0;
+      }
+
+      selectorComidaNivel.value = comida;
+      guardarProgresoNivel();
+      actualizarVistaNivel();
+      return true;
+    }
+
+    selectorComidaNivel.addEventListener("change", actualizarVistaNivel);
+
+    botonComer.addEventListener("click", () => {
+      if (registrarRespuestaNivel("comi")) estadoComidaNivel.textContent = `¡Registrado! Ganaste ${XP_POR_COMIDA} XP.`;
+    });
+
+    botonNoComer.addEventListener("click", () => {
+      if (registrarRespuestaNivel("no-comi")) estadoComidaNivel.textContent = "Registrado. Bajaste un nivel si estabas por encima del nivel 1 y tu XP volvió a cero.";
+    });
+
+    actualizarVistaNivel();
+
+    // Bluetooth UART — UUID corregidos para micro:bit
+    const UART_SERVICE = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+    const UART_TX = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"; // micro:bit -> app
+    const UART_RX = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"; // app -> micro:bit
+
+    let caracteristicaUART_RX = null;
+    let caracteristicaUART_TX = null;
+    let comidaPendienteMicrobit = null;
+    let bufferUART = "";
+    let alarmasActivas = localStorage.getItem("alarmasActivas") === "true";
+    const alarmasEnProceso = new Set();
+    const avisosMostrados = new Set();
+
+    document.getElementById("conectar").addEventListener("click", async () => {
+      let paso = "buscar la micro:bit";
+
+      try {
+        if (!navigator.bluetooth) {
+          throw new Error("Web Bluetooth no está disponible. Prueba Chrome o Edge en HTTPS o localhost.");
+        }
+
+        const dispositivo = await navigator.bluetooth.requestDevice({
+          filters: [{ namePrefix: "BBC micro:bit" }],
+          optionalServices: [UART_SERVICE]
+        });
+
+        paso = "conectar por GATT";
+        const servidor = await dispositivo.gatt.connect();
+
+        paso = "buscar el servicio UART";
+        const servicio = await servidor.getPrimaryService(UART_SERVICE);
+
+        paso = "obtener las características UART";
+        caracteristicaUART_RX = await servicio.getCharacteristic(UART_RX);
+        caracteristicaUART_TX = await servicio.getCharacteristic(UART_TX);
+
+        if (!caracteristicaUART_TX.properties.notify && !caracteristicaUART_TX.properties.indicate) {
+          throw new Error("La característica TX no admite notificaciones.");
+        }
+
+        paso = "activar notificaciones";
+        await caracteristicaUART_TX.startNotifications();
+        caracteristicaUART_TX.addEventListener("characteristicvaluechanged", recibirRespuestaMicrobit);
+
+        estadoAlarma.textContent = `Conectada a ${dispositivo.name || "micro:bit"}. Esperando respuestas.`;
+
+        dispositivo.addEventListener("gattserverdisconnected", () => {
+          caracteristicaUART_RX = null;
+          caracteristicaUART_TX = null;
+          estadoAlarma.textContent = "La micro:bit se desconectó. Vuelve a conectarla para enviar alarmas.";
+        });
+      } catch (error) {
+        caracteristicaUART_RX = null;
+        caracteristicaUART_TX = null;
+        estadoAlarma.textContent = `Error al ${paso}: ${error.message || error}`;
+        console.error(`Error al ${paso}:`, error);
+      }
+    });
+
+    function recibirRespuestaMicrobit(evento) {
+      const texto = new TextDecoder().decode(evento.target.value);
+      bufferUART += texto;
+      const lineas = bufferUART.split(/\r?\n/);
+      bufferUART = lineas.pop() || "";
+      lineas.forEach(procesarComandoMicrobit);
+    }
+
+    function procesarComandoMicrobit(texto) {
+      const comando = texto.trim().toUpperCase().replace(/\s+/g, " ");
+      if (comando !== "COMER" && comando !== "NO COMER") return;
+
+      const respuesta = comando === "COMER" ? "comi" : "no-comi";
+      const comida = comidaPendienteMicrobit || selectorComidaNivel.value;
+      const registrado = registrarRespuestaNivel(respuesta, comida);
+
+      if (registrado) {
+        estadoAlarma.textContent = comando === "COMER"
+          ? "La micro:bit confirmó que comiste. ¡Ganaste experiencia!"
+          : "La micro:bit indicó que no comiste. Tu nivel se actualizó.";
+      } else {
+        estadoAlarma.textContent = `Llegó "${comando}", pero esa comida ya estaba registrada hoy.`;
+      }
+      comidaPendienteMicrobit = null;
+    }
+
+    async function enviarComandoAlarma() {
+      if (!caracteristicaUART_RX) throw new Error("La micro:bit no está conectada.");
+
+      const datos = new TextEncoder().encode("ALARMA\n");
+      const propiedades = caracteristicaUART_RX.properties;
+
+      if (propiedades.writeWithoutResponse && caracteristicaUART_RX.writeValueWithoutResponse) {
+        await caracteristicaUART_RX.writeValueWithoutResponse(datos);
+      } else if (propiedades.write && caracteristicaUART_RX.writeValueWithResponse) {
+        await caracteristicaUART_RX.writeValueWithResponse(datos);
+      } else if (caracteristicaUART_RX.writeValue) {
+        await caracteristicaUART_RX.writeValue(datos);
+      } else {
+        throw new Error("La característica RX no admite escritura.");
+      }
+    }
+
+    document.getElementById("guardarHorarios").addEventListener("click", async () => {
+      localStorage.setItem("horariosComida", JSON.stringify(obtenerHorarios()));
+      alarmasActivas = true;
+      localStorage.setItem("alarmasActivas", "true");
+      mostrarRecomendaciones();
+
+      if ("Notification" in window && Notification.permission === "default") {
+        try { await Notification.requestPermission(); }
+        catch (error) { console.warn("No se pudo solicitar permiso para notificaciones:", error); }
+      }
+
+      estadoAlarma.textContent = caracteristicaUART_RX
+        ? "Horarios guardados y alarmas activadas."
+        : "Alarmas activadas. Conecta la micro:bit para enviarle los avisos.";
+    });
+
+    try {
+      const horariosGuardados = JSON.parse(localStorage.getItem("horariosComida"));
+      if (horariosGuardados) {
+        if (horariosGuardados.desayuno) document.getElementById("desayuno").value = horariosGuardados.desayuno;
+        if (horariosGuardados.comida) document.getElementById("almuerzo").value = horariosGuardados.comida;
+        if (horariosGuardados.cena) document.getElementById("cena").value = horariosGuardados.cena;
+      }
+    } catch { localStorage.removeItem("horariosComida"); }
+
+    function claveAlarma(fecha, comida) { return `alarma-${fecha}-${comida}`; }
+
+    async function revisarAlarmas() {
+      if (!alarmasActivas) return;
+
+      const ahora = new Date();
+      const horarios = obtenerHorarios();
+
+      for (const [comida, hora] of Object.entries(horarios)) {
+        if (!hora) continue;
+
+        const [horas, minutos] = hora.split(":").map(Number);
+        const horaProgramada = new Date(ahora);
+        horaProgramada.setHours(horas, minutos, 0, 0);
+        const retraso = ahora.getTime() - horaProgramada.getTime();
+
+        if (retraso < 0 || retraso > 5 * 60 * 1000) continue;
+
+        const clave = claveAlarma(fechaLocal(), comida);
+        const claveAviso = `${clave}-aviso`;
+        const claveEnvio = `${clave}-enviada`;
+
+        comidaPendienteMicrobit = comida;
+        selectorComidaNivel.value = comida;
+        actualizarVistaNivel();
+        mostrarRecomendaciones();
+
+        if (localStorage.getItem(claveAviso) !== "true" && !avisosMostrados.has(claveAviso)) {
+          avisosMostrados.add(claveAviso);
+          localStorage.setItem(claveAviso, "true");
+
+          const nombre = nombreInput.value.trim();
+          const mensaje = nombre ? `¡Hora de comer, ${nombre}!` : "¡Hora de comer!";
+
+          if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("Alarma de comida", { body: `${mensaje} Responde desde la micro:bit.` });
+          } else { alert(mensaje); }
+        }
+
+        if (localStorage.getItem(claveEnvio) === "true") continue;
+        if (alarmasEnProceso.has(clave)) continue;
+
+        if (!caracteristicaUART_RX) {
+          estadoAlarma.textContent = `Alarma de ${nombresComidas[comida]} activa. Conecta la micro:bit para enviarle el aviso.`;
+          continue;
+        }
+
+        alarmasEnProceso.add(clave);
+        try {
+          await enviarComandoAlarma();
+          localStorage.setItem(claveEnvio, "true");
+          estadoAlarma.textContent = `Alarma de ${nombresComidas[comida]} enviada a la micro:bit. Esperando respuesta.`;
+        } catch (error) {
+          estadoAlarma.textContent = `No se pudo enviar la alarma; se volverá a intentar: ${error.message}`;
+          console.error("Error al enviar la alarma UART:", error);
+        } finally { alarmasEnProceso.delete(clave); }
+      }
+    }
+
+    function revisarApp() {
+      revisarAlarmas();
+      if (selectorComida.value === "automatico") mostrarRecomendaciones();
+    }
+
+    actualizarSaludo();
+    mostrarRecomendaciones();
+    actualizarVistaNivel();
+    setInterval(revisarApp, 5000);
+  </script>
+</body>
+</html>
