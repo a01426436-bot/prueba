@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Comidas para estudiantes — Bluetooth corregido</title>
+  <style>
+    body { font: 16px Arial, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 16px; color: #1d3557; }
+    #estado { padding: 12px; background: #edf5ff; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Cargando la app corregida…</h1>
+  <p id="estado" role="status" aria-live="polite">Preparando la conexión Bluetooth corregida.</p>
+  <script>
+    (async function cargarAppCorregida() {
+      const estado = document.getElementById("estado");
+      try {
+        const respuesta = await fetch("./index_Version22_Version3.html", { cache: "no-store" });
+        if (!respuesta.ok) throw new Error("No se pudo cargar la app original (HTTP " + respuesta.status + ").");
+
+        let html = await respuesta.text();
+        const inicio = '    document.getElementById("conectar").addEventListener("click", async () => {';
+        const fin = "    function recibirRespuestaMicrobit(evento) {";
+        const posicionInicio = html.indexOf(inicio);
+        const posicionFin = html.indexOf(fin, posicionInicio);
+        if (posicionInicio < 0 || posicionFin < 0) {
+          throw new Error("No se encontró el bloque de conexión Bluetooth esperado en la app original.");
+        }
+
+        const manejadorCorregido = String.raw`    document.getElementById("conectar").addEventListener("click", async event => {
+      const boton = event.currentTarget;
+      boton.disabled = true;
+      let paso = "buscar la micro:bit";
+
+      try {
+        if (!navigator.bluetooth) {
+          throw new Error("Web Bluetooth no está disponible. Prueba Chrome o Edge en HTTPS o localhost.");
+        }
+
+        const dispositivo = await navigator.bluetooth.requestDevice({
+          filters: [{ namePrefix: "BBC micro:bit" }],
+          optionalServices: [UART_SERVICE]
+        });
+
+        // Escuchar desconexiones desde antes de conectar y buscar el servicio.
+        dispositivo.addEventListener("gattserverdisconnected", () => {
+          caracteristicaUART_RX = null;
+          caracteristicaUART_TX = null;
+          estadoAlarma.textContent = "La micro:bit se desconectó. Comprueba que siga encendida y vuelve a conectarla.";
+        });
+
+        let conectado = false;
+        let ultimoError;
+
+        for (let intento = 0; intento < 3; intento++) {
+          try {
+            paso = "conectar por GATT";
+            const servidor = dispositivo.gatt.connected
+              ? dispositivo.gatt
+              : await dispositivo.gatt.connect();
+
+            if (!servidor.connected) {
+              throw new Error("La conexión GATT se cerró antes de buscar el servicio.");
+            }
+
+            paso = "buscar el servicio UART";
+            const servicio = await servidor.getPrimaryService(UART_SERVICE);
+
+            paso = "obtener las características UART";
+            const rx = await servicio.getCharacteristic(UART_RX);
+            const tx = await servicio.getCharacteristic(UART_TX);
+
+            if (!servidor.connected) {
+              throw new Error("La micro:bit se desconectó durante la configuración UART.");
+            }
+            if (!tx.properties.notify && !tx.properties.indicate) {
+              throw new Error("La característica TX no admite notificaciones.");
+            }
+
+            paso = "activar notificaciones";
+            await tx.startNotifications();
+            tx.addEventListener("characteristicvaluechanged", recibirRespuestaMicrobit);
+            caracteristicaUART_RX = rx;
+            caracteristicaUART_TX = tx;
+            conectado = true;
+            break;
+          } catch (error) {
+            ultimoError = error;
+            caracteristicaUART_RX = null;
+            caracteristicaUART_TX = null;
+            if (dispositivo.gatt.connected || intento === 2) throw error;
+            await new Promise(resolve => setTimeout(resolve, 700));
+          }
+        }
+
+        if (!conectado) throw ultimoError || new Error("No se pudo establecer la conexión UART.");
+        estadoAlarma.textContent = "Conectada a " + (dispositivo.name || "micro:bit") + ". Esperando respuestas.";
+      } catch (error) {
+        caracteristicaUART_RX = null;
+        caracteristicaUART_TX = null;
+        estadoAlarma.textContent = "Error al " + paso + ": " + (error.message || error);
+        console.error("Error al " + paso + ":", error);
+      } finally {
+        boton.disabled = false;
+      }
+    });
+
+`;
+        html = html.slice(0, posicionInicio) + manejadorCorregido + html.slice(posicionFin);
+
+        // Reemplaza el documento de arranque por la app original con el manejador actualizado.
+        document.open();
+        document.write(html);
+        document.close();
+      } catch (error) {
+        estado.textContent = "No se pudo iniciar la app corregida: " + (error.message || error) + " Asegúrate de servir ambos archivos desde el mismo sitio HTTPS o localhost.";
+      }
+    })();
+  </script>
+</body>
+</html>
